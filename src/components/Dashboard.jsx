@@ -73,16 +73,17 @@ const Dashboard = ({ currentUser }) => {
           console.warn('Using fallback dashboard data - API may not be returning data properly');
         }
 
-        // Stats
+        // Stats - handle both nested (data.stats.*) and direct (data.*) structures
+        const statsData = data.stats || data;
         setStats({
-          totalBookings: data.stats?.totalBookings || 0,
-          completedLessons: data.stats?.completedLessons || 0,
-          totalSpent: data.stats?.totalSpent || 0,
-          hoursLearned: data.stats?.hoursLearned || 0,
-          totalStudents: data.stats?.favoriteTutorsCount || data.stats?.totalStudents || 0,
-          totalEarnings: data.stats?.totalEarnings || 0,
-          averageRating: data.stats?.averageRating || 0,
-          hoursCompleted: data.stats?.hoursCompleted || 0,
+          totalBookings: statsData.totalBookings || 0,
+          completedLessons: statsData.completedLessons || 0,
+          totalSpent: statsData.totalSpent || 0,
+          hoursLearned: statsData.hoursLearned || 0,
+          totalStudents: statsData.favoriteTutorsCount || statsData.totalStudents || 0,
+          totalEarnings: statsData.totalEarnings || 0,
+          averageRating: parseFloat(statsData.averageRating) || 0,
+          hoursCompleted: statsData.hoursCompleted || 0,
         });
 
         // Recent Activity
