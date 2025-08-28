@@ -292,37 +292,72 @@ export const tutorAPI = {
     try {
       console.log('Fetching tutor dashboard stats...');
       const response = await apiClient.get('/tutors/dashboard/stats');
-      
+
+      console.log('Raw dashboard stats response:', response);
+      console.log('Response data:', JSON.stringify(response.data, null, 2));
+
       if (response.status === 'success') {
+        // Check if response.data is empty or undefined
+        if (!response.data || Object.keys(response.data).length === 0) {
+          console.warn('Dashboard stats API returned empty data, using fallback');
+          return {
+            success: true,
+            data: {
+              stats: {
+                totalBookings: 0,
+                upcomingLessons: 0,
+                totalEarnings: 0,
+                averageRating: 0,
+                totalStudents: 0,
+                hoursCompleted: 0
+              },
+              recentActivity: [],
+              upcomingLessons: []
+            },
+            fallback: true
+          };
+        }
+
         return {
           success: true,
           data: response.data
         };
       }
-      
+
+      console.warn('Dashboard stats API did not return success status, using fallback');
       return {
         success: true,
         data: {
-          totalBookings: 0,
-          upcomingLessons: 0,
-          totalEarnings: '0.00',
-          averageRating: 0,
-          totalStudents: 0,
-          hoursCompleted: 0
-        }
+          stats: {
+            totalBookings: 0,
+            upcomingLessons: 0,
+            totalEarnings: 0,
+            averageRating: 0,
+            totalStudents: 0,
+            hoursCompleted: 0
+          },
+          recentActivity: [],
+          upcomingLessons: []
+        },
+        fallback: true
       };
     } catch (error) {
       console.error('Error fetching tutor dashboard stats:', error);
       return {
         success: true,
         data: {
-          totalBookings: 0,
-          upcomingLessons: 0,
-          totalEarnings: '0.00',
-          averageRating: 0,
-          totalStudents: 0,
-          hoursCompleted: 0
-        }
+          stats: {
+            totalBookings: 0,
+            upcomingLessons: 0,
+            totalEarnings: 0,
+            averageRating: 0,
+            totalStudents: 0,
+            hoursCompleted: 0
+          },
+          recentActivity: [],
+          upcomingLessons: []
+        },
+        fallback: true
       };
     }
   },
