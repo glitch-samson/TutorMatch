@@ -86,11 +86,12 @@ const Dashboard = ({ currentUser }) => {
           hoursCompleted: statsData.hoursCompleted || 0,
         });
 
-        // Recent Activity
-        const mappedActivity = Array.isArray(data.recentActivity)
-          ? data.recentActivity.map(a => ({
-              id: a.date,
-              message: a.action,
+        // Recent Activity - handle both nested and direct structures
+        const activityData = data.recentActivity || [];
+        const mappedActivity = Array.isArray(activityData)
+          ? activityData.map(a => ({
+              id: a.date || a.id || Math.random(),
+              message: a.action || a.message || 'Activity',
               time: a.date ? new Date(a.date).toLocaleString() : '',
               icon: 'Calendar',
               status: a.status === 'pending' ? 'upcoming' : a.status
@@ -98,10 +99,11 @@ const Dashboard = ({ currentUser }) => {
           : [];
         setRecentActivity(mappedActivity);
 
-        // Upcoming Lessons - handle differently for tutors vs students
-        const mappedLessons = Array.isArray(data.upcomingLessons || data)
-          ? (data.upcomingLessons || data).map(l => ({
-              id: l._id || l.id || l.date,
+        // Upcoming Lessons - handle both nested and direct structures
+        const lessonsData = data.upcomingLessons || [];
+        const mappedLessons = Array.isArray(lessonsData)
+          ? lessonsData.map(l => ({
+              id: l._id || l.id || l.date || Math.random(),
               // For tutors, show student info; for students, show tutor info
               otherParty: currentUser.type === 'tutor'
                 ? (l.studentId?.fullName || l.student?.fullName || 'Unknown Student')
