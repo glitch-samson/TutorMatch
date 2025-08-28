@@ -68,13 +68,18 @@ const Dashboard = ({ currentUser }) => {
         }
         const data = dashboardResponse.data || {};
 
+        // Show warning if using fallback data
+        if (dashboardResponse.fallback) {
+          console.warn('Using fallback dashboard data - API may not be returning data properly');
+        }
+
         // Stats
         setStats({
           totalBookings: data.stats?.totalBookings || 0,
           completedLessons: data.stats?.completedLessons || 0,
           totalSpent: data.stats?.totalSpent || 0,
           hoursLearned: data.stats?.hoursLearned || 0,
-          totalStudents: data.stats?.favoriteTutorsCount || 0,
+          totalStudents: data.stats?.favoriteTutorsCount || data.stats?.totalStudents || 0,
           totalEarnings: data.stats?.totalEarnings || 0,
           averageRating: data.stats?.averageRating || 0,
           hoursCompleted: data.stats?.hoursCompleted || 0,
