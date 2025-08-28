@@ -109,6 +109,9 @@ class ApiClient {
       }
 
       console.log('API response data:', data);
+      console.log('Response data type:', typeof data);
+      console.log('Response data keys:', data ? Object.keys(data) : 'No data');
+      console.log('Is data empty?', !data || Object.keys(data).length === 0);
 
       if (!response.ok) {
         console.error('API error response:', {
