@@ -86,39 +86,78 @@ const Dashboard = ({ currentUser }) => {
           hoursCompleted: statsData.hoursCompleted || 0,
         });
 
-        // Recent Activity - handle both nested and direct structures
-        const activityData = data.recentActivity || [];
-        const mappedActivity = Array.isArray(activityData)
-          ? activityData.map(a => ({
-              id: a.date || a.id || Math.random(),
-              message: a.action || a.message || 'Activity',
-              time: a.date ? new Date(a.date).toLocaleString() : '',
-              icon: 'Calendar',
-              status: a.status === 'pending' ? 'upcoming' : a.status
-            }))
-          : [];
-        setRecentActivity(mappedActivity);
+        // Fetch Recent Activity separately for tutors
+        if (currentUser.type === 'tutor') {
+          try {
+            const activityResponse = await execute(() => tutorAPI.getRecentActivity());
+            const activityData = activityResponse.data || [];
+            const mappedActivity = Array.isArray(activityData)
+              ? activityData.map(a => ({
+                  id: a.date || a.id || a._id || Math.random(),
+                  message: a.action || a.message || a.description || 'Activity',
+                  time: a.date ? new Date(a.date).toLocaleString() : '',
+                  icon: 'Calendar',
+                  status: a.status === 'pending' ? 'upcoming' : a.status
+                }))
+              : [];
+            setRecentActivity(mappedActivity);
+          } catch (activityError) {
+            console.error('Failed to load recent activity:', activityError);
+            setRecentActivity([]);
+          }
 
-        // Upcoming Lessons - handle both nested and direct structures
-        const lessonsData = data.upcomingLessons || [];
-        const mappedLessons = Array.isArray(lessonsData)
-          ? lessonsData.map(l => ({
-              id: l._id || l.id || l.date || Math.random(),
-              // For tutors, show student info; for students, show tutor info
-              otherParty: currentUser.type === 'tutor'
-                ? (l.studentId?.fullName || l.student?.fullName || 'Unknown Student')
-                : (l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor'),
-              tutor: currentUser.type === 'tutor'
-                ? (l.studentId?.fullName || l.student?.fullName || 'Unknown Student')
-                : (l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor'),
-              subject: l.subject || '',
-              duration: l.duration ? `${l.duration}h` : '',
-              time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-              status: l.status === 'pending' ? 'upcoming' : l.status,
-              totalCost: l.totalAmount || l.hourlyRate || 0,
-            }))
-          : [];
-        setUpcomingLessons(mappedLessons);
+          // Fetch Upcoming Lessons separately for tutors
+          try {
+            const lessonsResponse = await execute(() => tutorAPI.getUpcomingLessons());
+            const lessonsData = lessonsResponse.data || [];
+            const mappedLessons = Array.isArray(lessonsData)
+              ? lessonsData.map(l => ({
+                  id: l._id || l.id || l.date || Math.random(),
+                  // For tutors, show student info
+                  otherParty: l.studentId?.fullName || l.student?.fullName || 'Unknown Student',
+                  tutor: l.studentId?.fullName || l.student?.fullName || 'Unknown Student',
+                  subject: l.subject || '',
+                  duration: l.duration ? `${l.duration}h` : '',
+                  time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+                  status: l.status === 'pending' ? 'upcoming' : l.status,
+                  totalCost: l.totalAmount || l.hourlyRate || 0,
+                }))
+              : [];
+            setUpcomingLessons(mappedLessons);
+          } catch (lessonsError) {
+            console.error('Failed to load upcoming lessons:', lessonsError);
+            setUpcomingLessons([]);
+          }
+        } else {
+          // For students, use the existing logic from the main dashboard call
+          const activityData = data.recentActivity || [];
+          const mappedActivity = Array.isArray(activityData)
+            ? activityData.map(a => ({
+                id: a.date || a.id || Math.random(),
+                message: a.action || a.message || 'Activity',
+                time: a.date ? new Date(a.date).toLocaleString() : '',
+                icon: 'Calendar',
+                status: a.status === 'pending' ? 'upcoming' : a.status
+              }))
+            : [];
+          setRecentActivity(mappedActivity);
+
+          const lessonsData = data.upcomingLessons || [];
+          const mappedLessons = Array.isArray(lessonsData)
+            ? lessonsData.map(l => ({
+                id: l._id || l.id || l.date || Math.random(),
+                // For students, show tutor info
+                otherParty: l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor',
+                tutor: l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor',
+                subject: l.subject || '',
+                duration: l.duration ? `${l.duration}h` : '',
+                time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+                status: l.status === 'pending' ? 'upcoming' : l.status,
+                totalCost: l.totalAmount || l.hourlyRate || 0,
+              }))
+            : [];
+          setUpcomingLessons(mappedLessons);
+        }
 
         setIsLoading(false);
       } catch (error) {
