@@ -181,119 +181,125 @@ const markAsCompleted = async (booking) => {
 
 
 
-  const BookingCard = ({ b }) => (
-    <div className="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-3">
-          <img
-            src={b.tutor?.avatar || '/default-avatar.png'}
-            alt={b.tutor?.name || 'Tutor'}
-            className="w-12 h-12 rounded-full border"
-          />
-          <div>
-            <h3 className="font-semibold text-gray-800">
-              {b.tutor?.name || (currentUser?.type === 'tutor' ? 'Unknown Student' : 'Unknown Tutor')}
-            </h3>
-            <p className="text-sm text-gray-500">{b.subject}</p>
+  const BookingCard = ({ b }) => {
+    const ratingObj = b && typeof b.rating === 'object' && b.rating !== null ? b.rating : null;
+    const ratingValue = ratingObj ? ratingObj.rating : (typeof b?.rating === 'number' ? b.rating : null);
+    const hasReview = ratingValue !== null && ratingValue !== undefined;
+
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-3">
+            <img
+              src={b.tutor?.avatar || '/default-avatar.png'}
+              alt={b.tutor?.name || 'Tutor'}
+              className="w-12 h-12 rounded-full border"
+            />
+            <div>
+              <h3 className="font-semibold text-gray-800">
+                {b.tutor?.name || (currentUser?.type === 'tutor' ? 'Unknown Student' : 'Unknown Tutor')}
+              </h3>
+              <p className="text-sm text-gray-500">{b.subject}</p>
+            </div>
+          </div>
+          <span
+            className={`px-3 py-1 text-xs font-medium rounded-full capitalize ${
+              b.status === 'upcoming'
+                ? 'bg-blue-100 text-blue-700'
+                : b.status === 'completed'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {b.status}
+          </span>
+        </div>
+
+        {/* Date / Time */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm text-gray-600">
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+            {b.scheduledDate ? new Date(b.scheduledDate).toLocaleDateString() : 'N/A'}
+          </div>
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 text-gray-400" />
+            {b.scheduledDate
+              ? new Date(b.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'N/A'}
           </div>
         </div>
-        <span
-          className={`px-3 py-1 text-xs font-medium rounded-full capitalize ${
-            b.status === 'upcoming'
-              ? 'bg-blue-100 text-blue-700'
-              : b.status === 'completed'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {b.status}
-        </span>
-      </div>
 
-      {/* Date / Time */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm text-gray-600">
-        <div className="flex items-center">
-          <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-          {b.scheduledDate ? new Date(b.scheduledDate).toLocaleDateString() : 'N/A'}
-        </div>
-        <div className="flex items-center">
-          <Clock className="h-4 w-4 mr-2 text-gray-400" />
-          {b.scheduledDate
-            ? new Date(b.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            : 'N/A'}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-5 gap-3">
-        <div className="font-semibold text-gray-800">${b.totalCost || 0}</div>
-        <div className="flex flex-wrap gap-2">
-          {/* Common actions for upcoming/pending bookings */}
-          {(b.status === 'upcoming' || b.status === 'pending') && (
-            <>
-              <button className="btn btn-secondary text-sm flex items-center gap-1">
-                <MessageCircle className="h-4 w-4" /> Message
-              </button>
-              <button className="btn btn-primary text-sm flex items-center gap-1">
-                <Video className="h-4 w-4" /> Join
-              </button>
-
-              {/* Tutor-specific actions */}
-              {currentUser?.type === 'tutor' ? (
-                <button
-                  onClick={() => markAsCompleted(b)}
-                  className="btn bg-green-500 hover:bg-green-600 text-white text-sm flex items-center gap-1"
-                >
-                  <Star className="h-4 w-4" /> Mark Complete
+        {/* Footer */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-5 gap-3">
+          <div className="font-semibold text-gray-800">${b.totalCost || 0}</div>
+          <div className="flex flex-wrap gap-2">
+            {/* Common actions for upcoming/pending bookings */}
+            {(b.status === 'upcoming' || b.status === 'pending') && (
+              <>
+                <button className="btn btn-secondary text-sm flex items-center gap-1">
+                  <MessageCircle className="h-4 w-4" /> Message
                 </button>
-              ) : (
-                /* Student-specific actions */
-                <button
-                  onClick={() => {
-                    setSelectedBooking(b);
-                    setShowCancelModal(true);
-                  }}
-                  className="btn bg-red-500 hover:bg-red-600 text-white text-sm flex items-center gap-1"
-                >
-                  <X className="h-4 w-4" /> Cancel
+                <button className="btn btn-primary text-sm flex items-center gap-1">
+                  <Video className="h-4 w-4" /> Join
                 </button>
-              )}
-            </>
-          )}
 
-          {/* Student review actions for completed bookings */}
-          {b.status === 'completed' && currentUser?.type !== 'tutor' && (
-            <>
-              {!b.rating ? (
-                <button
-                  onClick={() => {
-                    setSelectedBooking(b);
-                    setShowReviewModal(true);
-                  }}
-                  className="btn btn-primary text-sm flex items-center gap-1"
-                >
-                  <Star className="h-4 w-4" /> Leave Review
-                </button>
-              ) : (
-                <div className="flex items-center text-yellow-500 text-sm font-medium">
-                  <Star className="h-4 w-4 fill-current mr-1" />
-                  {b.rating}/5 - Reviewed
-                </div>
-              )}
-            </>
-          )}
+                {/* Tutor-specific actions */}
+                {currentUser?.type === 'tutor' ? (
+                  <button
+                    onClick={() => markAsCompleted(b)}
+                    className="btn bg-green-500 hover:bg-green-600 text-white text-sm flex items-center gap-1"
+                  >
+                    <Star className="h-4 w-4" /> Mark Complete
+                  </button>
+                ) : (
+                  /* Student-specific actions */
+                  <button
+                    onClick={() => {
+                      setSelectedBooking(b);
+                      setShowCancelModal(true);
+                    }}
+                    className="btn bg-red-500 hover:bg-red-600 text-white text-sm flex items-center gap-1"
+                  >
+                    <X className="h-4 w-4" /> Cancel
+                  </button>
+                )}
+              </>
+            )}
 
-          {/* For tutors viewing completed bookings */}
-          {b.status === 'completed' && currentUser?.type === 'tutor' && (
-            <div className="text-green-600 text-sm font-medium flex items-center gap-1">
-              <Star className="h-4 w-4" /> Completed
-            </div>
-          )}
+            {/* Student review actions for completed bookings */}
+            {b.status === 'completed' && currentUser?.type !== 'tutor' && (
+              <>
+                {!hasReview ? (
+                  <button
+                    onClick={() => {
+                      setSelectedBooking(b);
+                      setShowReviewModal(true);
+                    }}
+                    className="btn btn-primary text-sm flex items-center gap-1"
+                  >
+                    <Star className="h-4 w-4" /> Leave Review
+                  </button>
+                ) : (
+                  <div className="flex items-center text-yellow-500 text-sm font-medium">
+                    <Star className="h-4 w-4 fill-current mr-1" />
+                    {ratingValue}/5 - Reviewed
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* For tutors viewing completed bookings */}
+            {b.status === 'completed' && currentUser?.type === 'tutor' && (
+              <div className="text-green-600 text-sm font-medium flex items-center gap-1">
+                <Star className="h-4 w-4" /> Completed
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
