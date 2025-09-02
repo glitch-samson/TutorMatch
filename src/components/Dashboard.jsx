@@ -75,15 +75,18 @@ const Dashboard = ({ currentUser }) => {
 
         // Stats - handle both nested (data.stats.*) and direct (data.*) structures
         const statsData = data.stats || data;
+        const favTutorsCount = typeof statsData.favoriteTutorsCount === 'number'
+          ? statsData.favoriteTutorsCount
+          : Array.isArray(data.favoriteTutors) ? data.favoriteTutors.length : 0;
         setStats({
-          totalBookings: statsData.totalBookings || 0,
-          completedLessons: statsData.completedLessons || 0,
-          totalSpent: statsData.totalSpent || 0,
-          hoursLearned: statsData.hoursLearned || 0,
-          totalStudents: statsData.favoriteTutorsCount || statsData.totalStudents || 0,
-          totalEarnings: statsData.totalEarnings || 0,
-          averageRating: parseFloat(statsData.averageRating) || 0,
-          hoursCompleted: statsData.hoursCompleted || 0,
+          totalBookings: Number(statsData.totalBookings) || 0,
+          completedLessons: Number(statsData.completedLessons) || 0,
+          totalSpent: Number(statsData.totalSpent) || 0,
+          hoursLearned: Number(statsData.hoursLearned ?? statsData.totalHoursLearned) || 0,
+          totalStudents: Number(statsData.totalStudents ?? favTutorsCount) || 0,
+          totalEarnings: Number(statsData.totalEarnings) || 0,
+          averageRating: Number(statsData.averageRating) || 0,
+          hoursCompleted: Number(statsData.hoursCompleted) || 0,
         });
 
         // Fetch Recent Activity separately for tutors
@@ -136,7 +139,7 @@ const Dashboard = ({ currentUser }) => {
                 id: a.date || a.id || Math.random(),
                 message: a.action || a.message || 'Activity',
                 time: a.date ? new Date(a.date).toLocaleString() : '',
-                icon: 'Calendar',
+                icon: a.type === 'rating' ? 'Star' : a.type === 'booking' ? 'Calendar' : 'BookOpen',
                 status: a.status === 'pending' ? 'upcoming' : a.status
               }))
             : [];
