@@ -111,26 +111,24 @@ const Dashboard = ({ currentUser, onNavigate }) => {
             setRecentActivity([]);
           }
 
-          // Fetch Upcoming Lessons separately for tutors
+          // Use pending bookings as upcoming lessons for tutors
           try {
-            const lessonsResponse = await execute(() => tutorAPI.getUpcomingLessons());
-            const lessonsData = lessonsResponse.data || [];
-            const mappedLessons = Array.isArray(lessonsData)
-              ? lessonsData.map(l => ({
-                  id: l._id || l.id || l.date || Math.random(),
-                  // For tutors, show student info
-                  otherParty: l.studentId?.fullName || l.student?.fullName || 'Unknown Student',
-                  tutor: l.studentId?.fullName || l.student?.fullName || 'Unknown Student',
-                  subject: l.subject || '',
-                  duration: l.duration ? `${l.duration}h` : '',
-                  time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-                  status: l.status === 'pending' ? 'upcoming' : l.status,
-                  totalCost: l.totalAmount || l.hourlyRate || 0,
-                }))
-              : [];
+            const bookingsRes = await execute(() => tutorAPI.getBookings(), { silent: true });
+            const bookings = Array.isArray(bookingsRes?.data) ? bookingsRes.data : [];
+            const pending = bookings.filter(b => b.status === 'pending' || b.status === 'upcoming');
+            const mappedLessons = pending.map(b => ({
+              id: b._id || b.id || Math.random(),
+              otherParty: b.studentId?.fullName || b.student?.fullName || 'Unknown Student',
+              tutor: b.studentId?.fullName || b.student?.fullName || 'Unknown Student',
+              subject: b.subject || '',
+              duration: b.duration ? `${b.duration}h` : '',
+              time: b.scheduledDate ? new Date(b.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+              status: b.status === 'pending' ? 'upcoming' : b.status,
+              totalCost: b.totalAmount || b.hourlyRate || 0,
+            }));
             setUpcomingLessons(mappedLessons);
           } catch (lessonsError) {
-            console.error('Failed to load upcoming lessons:', lessonsError);
+            console.error('Failed to load upcoming lessons (bookings):', lessonsError);
             setUpcomingLessons([]);
           }
         } else {
