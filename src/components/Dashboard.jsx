@@ -361,7 +361,7 @@ const Dashboard = ({ currentUser, onNavigate }) => {
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Manage Schedule</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Update your availability</p>
               </button>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('bookings') : upcomingRef?.current?.scrollIntoView({ behavior: 'smooth' }))} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <Users className="h-6 w-6 text-accent-600 dark:text-accent-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">View Students</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">See all your students</p>
