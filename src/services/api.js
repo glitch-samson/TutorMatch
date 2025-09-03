@@ -476,7 +476,7 @@ export const tutorAPI = {
   async getEarningsReport() {
     try {
       console.log('Fetching tutor earnings report...');
-      const response = await apiClient.get('/tutors/report/earnings');
+      const response = await apiClient.get('/tutors/reports/earnings');
 
       if (response.status === 'success') {
         return {
