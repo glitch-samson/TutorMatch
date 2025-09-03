@@ -270,7 +270,7 @@ const Dashboard = ({ currentUser, onNavigate }) => {
 
       {/* Earnings Report for Tutors */}
       {currentUser.type === 'tutor' && (
-        <div className="mb-8">
+        <div ref={earningsRef} className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Earnings Report</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="card p-4">
