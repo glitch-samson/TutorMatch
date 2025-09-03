@@ -374,7 +374,7 @@ const Dashboard = ({ currentUser, onNavigate }) => {
             </>
           ) : (
             <>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('search') : null)} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <Users className="h-6 w-6 text-primary-600 dark:text-primary-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Find Tutors</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Browse available tutors</p>
