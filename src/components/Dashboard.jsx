@@ -324,7 +324,7 @@ const Dashboard = ({ currentUser, onNavigate }) => {
         </div>
 
         {/* Upcoming Lessons */}
-        <div className="card p-6">
+        <div ref={upcomingRef} className="card p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Upcoming Lessons</h3>
           <div className="space-y-4">
             {upcomingLessons.length > 0 ? (
