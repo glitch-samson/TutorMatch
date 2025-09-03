@@ -1,5 +1,6 @@
 import { Calendar, Clock, MessageCircle, Video, Star, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { DEFAULT_AVATAR_URL } from '../constants/media';
 import { bookingAPI, tutorAPI, reviewsAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
 
@@ -63,13 +64,13 @@ const MyBookings = ({ currentUser }) => {
               // Show student info
               otherParty: {
                 name: b.studentId?.fullName || 'Unknown Student',
-                avatar: b.studentId?.avatar || '/default-avatar.png',
+                avatar: b.studentId?.avatar || DEFAULT_AVATAR_URL,
                 email: b.studentId?.email || '',
               },
               // Legacy field - shows student for tutors
               tutor: {
                 name: b.studentId?.fullName || 'Unknown Student',
-                avatar: b.studentId?.avatar || '/default-avatar.png',
+                avatar: b.studentId?.avatar || DEFAULT_AVATAR_URL,
               },
               subject: b.subject,
               status: status,
@@ -95,7 +96,7 @@ const MyBookings = ({ currentUser }) => {
               // Show tutor info
               otherParty: {
                 name: b.tutorId?.fullName || 'Unknown Tutor',
-                avatar: b.tutorId?.avatar || '/default-avatar.png',
+                avatar: b.tutorId?.avatar || DEFAULT_AVATAR_URL,
                 email: b.tutorId?.email || '',
                 hourlyRate: b.tutorId?.hourlyRate || b.hourlyRate,
                 subjects: b.tutorId?.subjects || [],
@@ -103,7 +104,7 @@ const MyBookings = ({ currentUser }) => {
               // Legacy field - shows tutor for students
               tutor: {
                 name: b.tutorId?.fullName || 'Unknown Tutor',
-                avatar: b.tutorId?.avatar || '/default-avatar.png',
+                avatar: b.tutorId?.avatar || DEFAULT_AVATAR_URL,
               },
               subject: b.subject,
               status: status,
@@ -192,7 +193,7 @@ const markAsCompleted = async (booking) => {
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
             <img
-              src={b.tutor?.avatar || '/default-avatar.png'}
+              src={b.tutor?.avatar || DEFAULT_AVATAR_URL}
               alt={b.tutor?.name || 'Tutor'}
               className="w-12 h-12 rounded-full border"
             />
@@ -453,7 +454,7 @@ const ReviewModal = ({ booking, onClose, onSubmit }) => {
 
         <div className="flex items-center gap-3 mb-4">
           <img
-            src={booking?.tutor?.avatar || '/default-avatar.png'}
+            src={booking?.tutor?.avatar || DEFAULT_AVATAR_URL}
             alt={booking?.tutor?.name}
             className="w-12 h-12 rounded-full border"
           />

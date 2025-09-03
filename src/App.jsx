@@ -362,7 +362,7 @@ function App() {
     // Redirect tutors from student-only views
     if (currentUser?.type === 'tutor' && (currentView === 'search' || currentView === 'wishlist')) {
       setCurrentView('dashboard');
-      return <Dashboard currentUser={currentUser} />;
+      return <Dashboard currentUser={currentUser} onNavigate={handleNavigate} />;
     }
 
     switch (currentView) {
@@ -379,7 +379,7 @@ function App() {
         return <FAQ />;
       
       case 'dashboard':
-        return <Dashboard currentUser={currentUser} />;
+        return <Dashboard currentUser={currentUser} onNavigate={handleNavigate} />;
       
       case 'search':
         return (

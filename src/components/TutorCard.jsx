@@ -1,4 +1,5 @@
 import { Star, MapPin, Clock, CheckCircle, Heart } from 'lucide-react';
+import { DEFAULT_AVATAR_URL } from '../constants/media';
 import { useState, useEffect } from 'react';
 import { wishlistAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
@@ -52,7 +53,7 @@ const TutorCard = ({ tutor, onSelect, onContact, wishlist = [], onWishlistUpdate
         <div className="flex-shrink-0">
           <div className="relative">
             <img
-              src={tutor.avatar || tutor.profilePicture || 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400'}
+              src={tutor.avatar || tutor.profilePicture || DEFAULT_AVATAR_URL}
               alt={tutor.name}
               className="w-20 h-20 rounded-full object-cover"
             />

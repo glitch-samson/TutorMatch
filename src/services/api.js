@@ -476,12 +476,36 @@ export const tutorAPI = {
   async getEarningsReport() {
     try {
       console.log('Fetching tutor earnings report...');
-      const response = await apiClient.get('/tutors/report/earnings');
+      const response = await apiClient.get('/tutors/reports/earnings');
 
       if (response.status === 'success') {
+        const payload = response.data || {};
+        const summary = payload.summary || {};
+        const earnings = Array.isArray(payload.earnings) ? payload.earnings : [];
+
+        const aggregates = earnings.reduce(
+          (acc, e) => ({
+            totalEarnings: acc.totalEarnings + Number(e.totalEarnings || 0),
+            totalLessons: acc.totalLessons + Number(e.totalLessons || 0),
+            totalHours: acc.totalHours + Number(e.totalHours || 0)
+          }),
+          { totalEarnings: 0, totalLessons: 0, totalHours: 0 }
+        );
+
+        const normalized = {
+          totalEarnings: Number(summary.totalEarnings ?? aggregates.totalEarnings) || 0,
+          thisMonth: Number(summary.thisMonthEarnings ?? 0) || 0,
+          lastMonth: Number(summary.lastMonthEarnings ?? 0) || 0,
+          totalSessions: Number(summary.totalLessons ?? aggregates.totalLessons) || 0,
+          avgSessionEarnings: Number(summary.averagePerLesson ?? (aggregates.totalLessons ? aggregates.totalEarnings / aggregates.totalLessons : 0)) || 0,
+          avgPerHour: Number(summary.averagePerHour ?? (aggregates.totalHours ? aggregates.totalEarnings / aggregates.totalHours : 0)) || 0,
+          totalHours: Number(summary.totalHours ?? aggregates.totalHours) || 0,
+          period: summary.period || 'month'
+        };
+
         return {
           success: true,
-          data: response.data
+          data: normalized
         };
       }
 

@@ -1,9 +1,9 @@
 import { Calendar, Users, BookOpen, TrendingUp, Clock, Star, DollarSign, MessageCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { userAPI, tutorAPI } from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import { userAPI, tutorAPI, bookingAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
 
-const Dashboard = ({ currentUser }) => {
+const Dashboard = ({ currentUser, onNavigate }) => {
   const [stats, setStats] = useState({
     totalBookings: 0,
     upcomingLessons: 0,
@@ -28,6 +28,8 @@ const Dashboard = ({ currentUser }) => {
   const [upcomingLessons, setUpcomingLessons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { execute } = useApi();
+  const earningsRef = useRef(null);
+  const upcomingRef = useRef(null);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -75,15 +77,18 @@ const Dashboard = ({ currentUser }) => {
 
         // Stats - handle both nested (data.stats.*) and direct (data.*) structures
         const statsData = data.stats || data;
+        const favTutorsCount = typeof statsData.favoriteTutorsCount === 'number'
+          ? statsData.favoriteTutorsCount
+          : Array.isArray(data.favoriteTutors) ? data.favoriteTutors.length : 0;
         setStats({
-          totalBookings: statsData.totalBookings || 0,
-          completedLessons: statsData.completedLessons || 0,
-          totalSpent: statsData.totalSpent || 0,
-          hoursLearned: statsData.hoursLearned || 0,
-          totalStudents: statsData.favoriteTutorsCount || statsData.totalStudents || 0,
-          totalEarnings: statsData.totalEarnings || 0,
-          averageRating: parseFloat(statsData.averageRating) || 0,
-          hoursCompleted: statsData.hoursCompleted || 0,
+          totalBookings: Number(statsData.totalBookings) || 0,
+          completedLessons: Number(statsData.completedLessons) || 0,
+          totalSpent: Number(statsData.totalSpent) || 0,
+          hoursLearned: Number(statsData.hoursLearned ?? statsData.totalHoursLearned) || 0,
+          totalStudents: Number(statsData.totalStudents ?? favTutorsCount) || 0,
+          totalEarnings: Number(statsData.totalEarnings) || 0,
+          averageRating: Number(statsData.averageRating) || 0,
+          hoursCompleted: Number(statsData.hoursCompleted) || 0,
         });
 
         // Fetch Recent Activity separately for tutors
@@ -106,26 +111,24 @@ const Dashboard = ({ currentUser }) => {
             setRecentActivity([]);
           }
 
-          // Fetch Upcoming Lessons separately for tutors
+          // Use pending bookings as upcoming lessons for tutors
           try {
-            const lessonsResponse = await execute(() => tutorAPI.getUpcomingLessons());
-            const lessonsData = lessonsResponse.data || [];
-            const mappedLessons = Array.isArray(lessonsData)
-              ? lessonsData.map(l => ({
-                  id: l._id || l.id || l.date || Math.random(),
-                  // For tutors, show student info
-                  otherParty: l.studentId?.fullName || l.student?.fullName || 'Unknown Student',
-                  tutor: l.studentId?.fullName || l.student?.fullName || 'Unknown Student',
-                  subject: l.subject || '',
-                  duration: l.duration ? `${l.duration}h` : '',
-                  time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-                  status: l.status === 'pending' ? 'upcoming' : l.status,
-                  totalCost: l.totalAmount || l.hourlyRate || 0,
-                }))
-              : [];
+            const bookingsRes = await execute(() => tutorAPI.getBookings(), { silent: true });
+            const bookings = Array.isArray(bookingsRes?.data) ? bookingsRes.data : [];
+            const pending = bookings.filter(b => b.status === 'pending' || b.status === 'upcoming');
+            const mappedLessons = pending.map(b => ({
+              id: b._id || b.id || Math.random(),
+              otherParty: b.studentId?.fullName || b.student?.fullName || 'Unknown Student',
+              tutor: b.studentId?.fullName || b.student?.fullName || 'Unknown Student',
+              subject: b.subject || '',
+              duration: b.duration ? `${b.duration}h` : '',
+              time: b.scheduledDate ? new Date(b.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+              status: b.status === 'pending' ? 'upcoming' : b.status,
+              totalCost: b.totalAmount || b.hourlyRate || 0,
+            }));
             setUpcomingLessons(mappedLessons);
           } catch (lessonsError) {
-            console.error('Failed to load upcoming lessons:', lessonsError);
+            console.error('Failed to load upcoming lessons (bookings):', lessonsError);
             setUpcomingLessons([]);
           }
         } else {
@@ -136,27 +139,32 @@ const Dashboard = ({ currentUser }) => {
                 id: a.date || a.id || Math.random(),
                 message: a.action || a.message || 'Activity',
                 time: a.date ? new Date(a.date).toLocaleString() : '',
-                icon: 'Calendar',
+                icon: a.type === 'rating' ? 'Star' : a.type === 'booking' ? 'Calendar' : 'BookOpen',
                 status: a.status === 'pending' ? 'upcoming' : a.status
               }))
             : [];
           setRecentActivity(mappedActivity);
 
-          const lessonsData = data.upcomingLessons || [];
-          const mappedLessons = Array.isArray(lessonsData)
-            ? lessonsData.map(l => ({
-                id: l._id || l.id || l.date || Math.random(),
-                // For students, show tutor info
-                otherParty: l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor',
-                tutor: l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor',
-                subject: l.subject || '',
-                duration: l.duration ? `${l.duration}h` : '',
-                time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-                status: l.status === 'pending' ? 'upcoming' : l.status,
-                totalCost: l.totalAmount || l.hourlyRate || 0,
-              }))
-            : [];
-          setUpcomingLessons(mappedLessons);
+          // Use pending bookings as upcoming lessons for students
+          try {
+            const bookingsRes = await execute(() => bookingAPI.getBookings(), { silent: true });
+            const bookings = Array.isArray(bookingsRes?.data) ? bookingsRes.data : [];
+            const pending = bookings.filter(b => b.status === 'pending' || b.status === 'upcoming');
+            const mappedLessons = pending.map(b => ({
+              id: b._id || b.id || Math.random(),
+              otherParty: b.tutorId?.fullName || b.tutor?.fullName || 'Unknown Tutor',
+              tutor: b.tutorId?.fullName || b.tutor?.fullName || 'Unknown Tutor',
+              subject: b.subject || '',
+              duration: b.duration ? `${b.duration}h` : '',
+              time: b.scheduledDate ? new Date(b.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+              status: b.status === 'pending' ? 'upcoming' : b.status,
+              totalCost: b.totalAmount || b.hourlyRate || 0,
+            }));
+            setUpcomingLessons(mappedLessons);
+          } catch (e) {
+            console.error('Failed to load bookings for upcoming lessons:', e);
+            setUpcomingLessons([]);
+          }
         }
 
         setIsLoading(false);
@@ -262,7 +270,7 @@ const Dashboard = ({ currentUser }) => {
 
       {/* Earnings Report for Tutors */}
       {currentUser.type === 'tutor' && (
-        <div className="mb-8">
+        <div ref={earningsRef} className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Earnings Report</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="card p-4">
@@ -316,7 +324,7 @@ const Dashboard = ({ currentUser }) => {
         </div>
 
         {/* Upcoming Lessons */}
-        <div className="card p-6">
+        <div ref={upcomingRef} className="card p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Upcoming Lessons</h3>
           <div className="space-y-4">
             {upcomingLessons.length > 0 ? (
@@ -348,17 +356,17 @@ const Dashboard = ({ currentUser }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {currentUser.type === 'tutor' ? (
             <>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('bookings') : upcomingRef?.current?.scrollIntoView({ behavior: 'smooth' }))} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <Calendar className="h-6 w-6 text-primary-600 dark:text-primary-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Manage Schedule</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Update your availability</p>
               </button>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('bookings') : upcomingRef?.current?.scrollIntoView({ behavior: 'smooth' }))} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <Users className="h-6 w-6 text-accent-600 dark:text-accent-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">View Students</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">See all your students</p>
               </button>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => earningsRef?.current?.scrollIntoView({ behavior: 'smooth' })} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <TrendingUp className="h-6 w-6 text-secondary-600 dark:text-secondary-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Earnings Report</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">View detailed earnings</p>
@@ -366,17 +374,17 @@ const Dashboard = ({ currentUser }) => {
             </>
           ) : (
             <>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('search') : null)} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <Users className="h-6 w-6 text-primary-600 dark:text-primary-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Find Tutors</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Browse available tutors</p>
               </button>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('bookings') : upcomingRef?.current?.scrollIntoView({ behavior: 'smooth' }))} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <BookOpen className="h-6 w-6 text-accent-600 dark:text-accent-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">My Lessons</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">View lesson history</p>
               </button>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => (onNavigate ? onNavigate('bookings') : null)} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <Star className="h-6 w-6 text-secondary-600 dark:text-secondary-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Leave Reviews</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Rate your tutors</p>

@@ -1,5 +1,6 @@
 import { Search, User, Bell, Home, Calendar, Heart, Settings as SettingsIcon, LogOut, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
+import { DEFAULT_AVATAR_URL } from '../constants/media';
 import { useTheme } from './ThemeProvider';
 
 const Header = ({ currentUser, onAuthChange, onShowAuth, currentView, onNavigate }) => {
@@ -81,7 +82,7 @@ const Header = ({ currentUser, onAuthChange, onShowAuth, currentView, onNavigate
                     className="flex items-center space-x-2 p-1 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     <img
-                      src={currentUser.avatar}
+                      src={currentUser.avatar || DEFAULT_AVATAR_URL}
                       alt="Profile"
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover"
                     />

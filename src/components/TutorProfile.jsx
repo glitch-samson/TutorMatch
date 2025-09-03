@@ -1,5 +1,6 @@
 import { Star, MapPin, Clock, CheckCircle, ArrowLeft, Calendar, MessageCircle, Languages, GraduationCap } from 'lucide-react';
 import { reviews } from '../data/mockData';
+import { DEFAULT_AVATAR_URL } from '../constants/media';
 
 const TutorProfile = ({ tutor, onBack, onBooking }) => {
   const tutorReviews = reviews.filter(review => review.tutorId === tutor.id);
@@ -22,7 +23,7 @@ const TutorProfile = ({ tutor, onBack, onBooking }) => {
             <div className="flex flex-col sm:flex-row gap-6 mb-6">
               <div className="relative flex-shrink-0">
                 <img
-                  src={tutor.avatar}
+                  src={tutor.avatar || tutor.profilePicture || DEFAULT_AVATAR_URL}
                   alt={tutor.name}
                   className="w-32 h-32 rounded-full object-cover"
                 />
