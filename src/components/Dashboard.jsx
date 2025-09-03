@@ -145,21 +145,26 @@ const Dashboard = ({ currentUser, onNavigate }) => {
             : [];
           setRecentActivity(mappedActivity);
 
-          const lessonsData = data.upcomingLessons || [];
-          const mappedLessons = Array.isArray(lessonsData)
-            ? lessonsData.map(l => ({
-                id: l._id || l.id || l.date || Math.random(),
-                // For students, show tutor info
-                otherParty: l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor',
-                tutor: l.tutorId?.fullName || l.tutor?.fullName || 'Unknown Tutor',
-                subject: l.subject || '',
-                duration: l.duration ? `${l.duration}h` : '',
-                time: l.scheduledDate ? new Date(l.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-                status: l.status === 'pending' ? 'upcoming' : l.status,
-                totalCost: l.totalAmount || l.hourlyRate || 0,
-              }))
-            : [];
-          setUpcomingLessons(mappedLessons);
+          // Use pending bookings as upcoming lessons for students
+          try {
+            const bookingsRes = await execute(() => bookingAPI.getBookings(), { silent: true });
+            const bookings = Array.isArray(bookingsRes?.data) ? bookingsRes.data : [];
+            const pending = bookings.filter(b => b.status === 'pending' || b.status === 'upcoming');
+            const mappedLessons = pending.map(b => ({
+              id: b._id || b.id || Math.random(),
+              otherParty: b.tutorId?.fullName || b.tutor?.fullName || 'Unknown Tutor',
+              tutor: b.tutorId?.fullName || b.tutor?.fullName || 'Unknown Tutor',
+              subject: b.subject || '',
+              duration: b.duration ? `${b.duration}h` : '',
+              time: b.scheduledDate ? new Date(b.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+              status: b.status === 'pending' ? 'upcoming' : b.status,
+              totalCost: b.totalAmount || b.hourlyRate || 0,
+            }));
+            setUpcomingLessons(mappedLessons);
+          } catch (e) {
+            console.error('Failed to load bookings for upcoming lessons:', e);
+            setUpcomingLessons([]);
+          }
         }
 
         setIsLoading(false);
