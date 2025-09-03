@@ -366,7 +366,7 @@ const Dashboard = ({ currentUser, onNavigate }) => {
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">View Students</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">See all your students</p>
               </button>
-              <button className="card p-4 text-left hover:shadow-md transition-shadow">
+              <button onClick={() => earningsRef?.current?.scrollIntoView({ behavior: 'smooth' })} className="card p-4 text-left hover:shadow-md transition-shadow">
                 <TrendingUp className="h-6 w-6 text-secondary-600 dark:text-secondary-400 mb-2" />
                 <h4 className="font-medium text-gray-900 dark:text-gray-100">Earnings Report</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">View detailed earnings</p>
