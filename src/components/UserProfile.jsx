@@ -1,5 +1,6 @@
 import { User, Mail, MapPin, Calendar, Edit3, Camera, Save, X } from 'lucide-react';
 import { useState } from 'react';
+import { DEFAULT_AVATAR_URL } from '../constants/media';
 
 const UserProfile = ({ currentUser, onUpdateUser, onBack }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -80,7 +81,7 @@ const UserProfile = ({ currentUser, onUpdateUser, onBack }) => {
             <div className="text-center">
               <div className="relative inline-block">
                 <img
-                  src={currentUser.avatar}
+                  src={currentUser.avatar || DEFAULT_AVATAR_URL}
                   alt={currentUser.name}
                   className="w-32 h-32 rounded-full object-cover mx-auto"
                 />
