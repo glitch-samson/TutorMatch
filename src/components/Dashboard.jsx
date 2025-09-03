@@ -1,9 +1,9 @@
 import { Calendar, Users, BookOpen, TrendingUp, Clock, Star, DollarSign, MessageCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { userAPI, tutorAPI } from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import { userAPI, tutorAPI, bookingAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
 
-const Dashboard = ({ currentUser }) => {
+const Dashboard = ({ currentUser, onNavigate }) => {
   const [stats, setStats] = useState({
     totalBookings: 0,
     upcomingLessons: 0,
@@ -28,6 +28,8 @@ const Dashboard = ({ currentUser }) => {
   const [upcomingLessons, setUpcomingLessons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { execute } = useApi();
+  const earningsRef = useRef(null);
+  const upcomingRef = useRef(null);
 
   useEffect(() => {
     const loadDashboardData = async () => {
