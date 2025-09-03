@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DEFAULT_AVATAR_URL } from '../constants/media';
 import { Heart, Star, MapPin, Clock, BookOpen, Trash2 } from 'lucide-react';
 import { wishlistAPI } from '../services/api';
 import { useApi } from '../hooks/useApi';
@@ -55,7 +56,7 @@ const Wishlist = ({ onSelectTutor, onContactTutor }) => {
           {/* Avatar and basic info */}
           <div className="flex-shrink-0">
             <img
-              src={tutor.avatar || tutor.profilePicture || '/default-avatar.png'}
+              src={tutor.avatar || tutor.profilePicture || DEFAULT_AVATAR_URL}
               alt={tutor.name || tutor.fullName}
               className="w-20 h-20 rounded-full object-cover"
             />
